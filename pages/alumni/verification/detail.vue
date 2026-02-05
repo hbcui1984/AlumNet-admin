@@ -31,9 +31,17 @@
           <text class="label">性别</text>
           <text class="value">{{ getGenderText(detail.gender) }}</text>
         </view>
+        <view v-if="detail.idCard" class="detail-item">
+          <text class="label">身份证号</text>
+          <text class="value">{{ maskIdCard(detail.idCard) }}</text>
+        </view>
         <view class="detail-item">
           <text class="label">入学年份</text>
           <text class="value">{{ detail.education?.enrollmentYear || '-' }}级</text>
+        </view>
+        <view class="detail-item">
+          <text class="label">毕业年份</text>
+          <text class="value">{{ detail.education?.graduationYear ? detail.education.graduationYear + '年' : '-' }}</text>
         </view>
         <view class="detail-item">
           <text class="label">学院</text>
@@ -48,8 +56,53 @@
           <text class="value">{{ detail.education?.degree || '-' }}</text>
         </view>
         <view class="detail-item">
+          <text class="label">班级</text>
+          <text class="value">{{ detail.education?.className || '-' }}</text>
+        </view>
+        <view class="detail-item">
           <text class="label">学号</text>
           <text class="value">{{ detail.education?.studentId || '-' }}</text>
+        </view>
+      </uni-card>
+
+      <!-- 高中特有信息 -->
+      <uni-card v-if="detail.classTeacher || detail.middleSchool || (detail.teachers && detail.teachers.length > 0)"
+                title="高中信息" :is-shadow="false" class="mt-20">
+        <view v-if="detail.classTeacher" class="detail-item">
+          <text class="label">高三班主任</text>
+          <text class="value">{{ detail.classTeacher }}</text>
+        </view>
+        <view v-if="detail.middleSchool" class="detail-item">
+          <text class="label">初中毕业学校</text>
+          <text class="value">{{ detail.middleSchool }}</text>
+        </view>
+        <view v-if="detail.teachers && detail.teachers.length > 0" class="detail-item">
+          <text class="label">任课老师</text>
+          <text class="value">{{ detail.teachers.join('、') }}</text>
+        </view>
+      </uni-card>
+
+      <!-- 工作信息 -->
+      <uni-card v-if="detail.currentCompany || detail.currentPosition || detail.city"
+                title="工作信息" :is-shadow="false" class="mt-20">
+        <view v-if="detail.currentCompany" class="detail-item">
+          <text class="label">当前单位</text>
+          <text class="value">{{ detail.currentCompany }}</text>
+        </view>
+        <view v-if="detail.currentPosition" class="detail-item">
+          <text class="label">当前职位</text>
+          <text class="value">{{ detail.currentPosition }}</text>
+        </view>
+        <view v-if="detail.city" class="detail-item">
+          <text class="label">现居城市</text>
+          <text class="value">{{ detail.city }}</text>
+        </view>
+      </uni-card>
+
+      <!-- 对母校寄语 -->
+      <uni-card v-if="detail.messageToSchool" title="对母校寄语" :is-shadow="false" class="mt-20">
+        <view class="message-content">
+          <text>{{ detail.messageToSchool }}</text>
         </view>
       </uni-card>
 
@@ -75,6 +128,10 @@
         <view class="detail-item">
           <text class="label">审核结果</text>
           <uni-tag :text="getStatusText(detail.status)" :type="getStatusType(detail.status)" />
+        </view>
+        <view v-if="detail.alumniCardNo" class="detail-item">
+          <text class="label">校友卡号</text>
+          <text class="value card-no">{{ detail.alumniCardNo }}</text>
         </view>
         <view class="detail-item">
           <text class="label">审核时间</text>
@@ -211,6 +268,11 @@ export default {
       const map = { 1: '男', 2: '女' }
       return map[gender] || '未知'
     },
+    maskIdCard(idCard) {
+      if (!idCard || idCard.length < 10) return idCard
+      // 显示前6位和后4位，中间用*代替
+      return idCard.substring(0, 6) + '********' + idCard.substring(idCard.length - 4)
+    },
     getStatusText(status) {
       const map = { 0: '待审核', 1: '已通过', 2: '已拒绝' }
       return map[status] || '未知'
@@ -308,6 +370,21 @@ export default {
 
 .detail-item .reject-reason {
   color: #E74C3C;
+}
+
+.detail-item .card-no {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #2E5C8A;
+  letter-spacing: 1px;
+}
+
+.message-content {
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  line-height: 1.6;
+  color: #666;
 }
 
 .proof-images {

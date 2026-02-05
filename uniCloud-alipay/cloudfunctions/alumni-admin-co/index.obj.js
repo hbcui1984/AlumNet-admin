@@ -6,6 +6,17 @@
 const db = uniCloud.database()
 const dbCmd = db.command
 
+/**
+ * 生成校友卡号
+ * @param {string} enrollmentYear - 入学年份
+ * @param {number} sequence - 序号
+ * @returns {string} 校友卡号，格式：年份+8位序号
+ */
+function generateAlumniCardNo(enrollmentYear, sequence) {
+  const paddedSequence = String(sequence).padStart(8, '0')
+  return `${enrollmentYear}${paddedSequence}`
+}
+
 module.exports = {
   _before: async function() {
     // 获取客户端信息
@@ -213,7 +224,7 @@ module.exports = {
 
     const verification = res.data[0]
 
-    // 获取用户信息
+    // 获取用户信息（包含校友卡号等）
     const userRes = await db.collection('uni-id-users').doc(verification.user_id).get()
     const userInfo = userRes.data && userRes.data.length > 0 ? userRes.data[0] : {}
 
@@ -221,6 +232,7 @@ module.exports = {
       errCode: 0,
       data: {
         ...verification,
+        alumniCardNo: userInfo.alumniCardNo, // 添加校友卡号
         userInfo: {
           _id: userInfo._id,
           nickname: userInfo.nickname,
@@ -276,9 +288,34 @@ module.exports = {
 
     // 如果通过，更新用户的校友状态
     if (status === 1) {
+      // 生成校友卡号
+      const enrollmentYear = verification.education?.enrollmentYear || new Date().getFullYear()
+
+      // 查询该年份最大的卡号
+      const cardRes = await db.collection('uni-id-users')
+        .where({
+          alumniCardNo: dbCmd.exists(true),
+          alumniCardNo: new RegExp(`^${enrollmentYear}`)
+        })
+        .orderBy('alumniCardNo', 'desc')
+        .limit(1)
+        .get()
+
+      let sequence = 1
+      if (cardRes.data && cardRes.data.length > 0) {
+        const lastCardNo = cardRes.data[0].alumniCardNo
+        const lastSequence = parseInt(lastCardNo.substring(4))
+        sequence = lastSequence + 1
+      }
+
+      const alumniCardNo = generateAlumniCardNo(enrollmentYear, sequence)
+
       await db.collection('uni-id-users').doc(verification.user_id).update({
         alumniStatus: 1,
-        alumniVerifyDate: now
+        alumniVerifyDate: now,
+        alumniCardNo: alumniCardNo,
+        realName: verification.realName,
+        gender: verification.gender
       })
 
       // 同步更新或创建 alumni-users 记录
@@ -291,6 +328,7 @@ module.exports = {
         realName: verification.realName,
         gender: verification.gender,
         primaryEducation: verification.education,
+        alumniCardNo: alumniCardNo,
         update_date: now
       }
 
