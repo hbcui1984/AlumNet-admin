@@ -83,6 +83,19 @@
         </uni-forms-item>
       </uni-card>
 
+      <!-- 认证设置 -->
+      <uni-card title="认证设置" :is-shadow="false" class="mt-20">
+        <uni-forms-item label="校友推荐认证">
+          <switch :checked="formData.features.enableRecommendVerify" @change="e => formData.features.enableRecommendVerify = e.detail.value" />
+          <text class="switch-desc">开启后，已认证校友可以推荐他人，推荐数达标自动通过认证</text>
+        </uni-forms-item>
+
+        <uni-forms-item v-if="formData.features.enableRecommendVerify" label="所需推荐人数">
+          <uni-number-box v-model="formData.features.recommendCount" :min="1" :max="10" />
+          <text class="switch-desc">被推荐人获得该数量推荐后自动通过认证</text>
+        </uni-forms-item>
+      </uni-card>
+
       <!-- 联系方式 -->
       <uni-card title="联系方式" :is-shadow="false" class="mt-20">
         <uni-forms-item label="联系邮箱" name="contact.email">
@@ -127,7 +140,9 @@ export default {
           enableVerification: true,
           enableFriendship: true,
           enableChat: true,
-          enableActivity: true
+          enableActivity: true,
+          enableRecommendVerify: false,
+          recommendCount: 3
         },
         contact: {
           email: '',
@@ -164,7 +179,9 @@ export default {
               enableVerification: res.data.features?.enableVerification !== false,
               enableFriendship: res.data.features?.enableFriendship !== false,
               enableChat: res.data.features?.enableChat !== false,
-              enableActivity: res.data.features?.enableActivity !== false
+              enableActivity: res.data.features?.enableActivity !== false,
+              enableRecommendVerify: res.data.features?.enableRecommendVerify === true,
+              recommendCount: res.data.features?.recommendCount || 3
             },
             contact: {
               email: res.data.contact?.email || '',

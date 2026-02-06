@@ -88,7 +88,9 @@ module.exports = {
           enableVerification: true,
           enableFriendship: true,
           enableChat: true,
-          enableActivity: true
+          enableActivity: true,
+          enableRecommendVerify: false,
+          recommendCount: 3
         }
       }
     }
@@ -119,7 +121,9 @@ module.exports = {
         enableVerification: config.features?.enableVerification !== false,
         enableFriendship: config.features?.enableFriendship !== false,
         enableChat: config.features?.enableChat !== false,
-        enableActivity: config.features?.enableActivity !== false
+        enableActivity: config.features?.enableActivity !== false,
+        enableRecommendVerify: config.features?.enableRecommendVerify === true,
+        recommendCount: parseInt(config.features?.recommendCount) || 3
       },
       contact: {
         email: config.contact?.email || '',
@@ -346,6 +350,17 @@ module.exports = {
         await db.collection('alumni-users').add(alumniData)
       }
     }
+
+    // 写入审计日志
+    await db.collection('alumni-verify-logs').add({
+      userId: verification.user_id,
+      verificationId: id,
+      method: 'admin_review',
+      result: status === 1 ? 'approved' : 'rejected',
+      rejectReason: status === 2 ? (rejectReason || '') : undefined,
+      reviewerId: this.uid,
+      createTime: now
+    })
 
     return { errCode: 0, errMsg: status === 1 ? '审核通过' : '已拒绝' }
   },
