@@ -34,8 +34,11 @@ Each feature typically has `list/` and `detail/` subdirectories.
 
 ### Cloud Backend
 
-Cloud functions are in `uniCloud-alipay/cloudfunctions/`:
-- `alumni-admin-co/` - Main cloud object for alumni admin operations
+**重要：本项目复用 AlumNet 主项目（同级目录 `../AlumNet`）的 uniCloud 服务空间，不应在本项目下创建自定义云函数。**
+
+- `alumni-admin-co` 云对象位于 **AlumNet 主项目**：`../AlumNet/uniCloud-alipay/cloudfunctions/alumni-admin-co/`
+- 本项目 `uniCloud-alipay/cloudfunctions/` 下只保留 uni-admin 框架自带的云函数（uni-stat、uni-portal 等）
+- 新增管理端云函数时，必须在 AlumNet 主项目中创建并部署
 - Cloud objects use `_before` hook for authentication verification
 - Role-based authorization checks in cloud functions
 
@@ -53,12 +56,17 @@ Located in `js_sdk/uni-admin/`:
 - `permission.js` - Permission checking utilities
 - `util.js` - General utilities
 
-### Database Schemas
+### Database & Data Model
 
-Schemas in `uniCloud-alipay/database/`:
-- `uni-id-*` - Identity and access control tables
-- `opendb-*` - Open database schemas (menus, apps, etc.)
-- `school-config` - Alumni-specific school configuration
+**重要：校友相关数据全部存储在 `uni-id-users` 表中，不使用独立的 `alumni-verification` 或 `alumni-users` 集合。**
+
+与 AlumNet 主项目保持一致的数据模型：
+- 认证信息直接存在 `uni-id-users`：`alumniStatus`(0待审核/1已通过/2已拒绝)、`submitTime`、`realName`、`educations`、`alumniCardNo` 等
+- 学校配置集合名为 `alumni-school-config`（非 `school-config`）
+- 好友关系集合名为 `alumni-friends`（复数，非 `alumni-friend`）
+- 审计日志集合为 `alumni-verify-logs`
+
+Database schemas 统一在 AlumNet 主项目中管理，本项目只保留 uni-admin 框架自带的 schema。
 
 ## Key Conventions
 
@@ -87,3 +95,20 @@ Translations in `i18n/` directory (en.json, zh-Hans.json, zh-Hant.json). Use `$t
 - `admin.config.js` - Admin UI configuration (login path, navbar, themes)
 - `pages.json` - Page routing and window layout
 - `manifest.json` - App manifest and platform settings
+
+## 开发铁律
+
+### 1. 先查主项目，再写代码
+
+本项目是 AlumNet 主项目的管理端，共享同一个服务空间和数据库。编写任何涉及数据库操作的代码前，必须先查看主项目 `../AlumNet/uniCloud-alipay/cloudfunctions/` 下已有云对象的实现，确认：
+- 实际使用了哪些集合名（不要自己猜或自己起名）
+- 数据存储在哪个集合、哪些字段里（不要凭空假设独立集合）
+- 集合命名的准确拼写（单复数、前缀等）
+
+### 2. 不要凭空创建集合
+
+绝对不要假设存在某个集合然后直接使用。如果主项目没有这个集合的 schema 定义，也没有云函数在读写它，那它就不存在。所有集合以主项目 `../AlumNet/uniCloud-alipay/database/` 下的 schema 文件为准。
+
+### 3. 云函数只放主项目
+
+所有自定义云函数（包括管理端专用的）都必须放在 AlumNet 主项目下，本项目只保留 uni-admin 框架自带的。`package.json` 中 `uni-id-common` 的依赖路径要与主项目其他云对象一致：`file:../../../uni_modules/uni-id-common/uniCloud/cloudfunctions/common/uni-id-common`。
