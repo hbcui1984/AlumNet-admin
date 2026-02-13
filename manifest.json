@@ -1,7 +1,7 @@
 {
     "name" : "AlumNet-admin",
-    "appid" : "__UNI__52EBAD0",
-    "description" : "",
+    "appid" : "",
+    "description" : "校友小程序的管理端",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,
