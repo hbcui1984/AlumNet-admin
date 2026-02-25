@@ -96,6 +96,18 @@ Translations in `i18n/` directory (en.json, zh-Hans.json, zh-Hant.json). Use `$t
 - `pages.json` - Page routing and window layout
 - `manifest.json` - App manifest and platform settings
 
+## 敏感文件处理
+
+### manifest.json 与 appid
+
+`manifest.json` 中包含 appid 等敏感信息，**不应将含有真实 appid 的版本提交到 git**。
+
+处理规则：
+- git 提交时，`manifest.json` 中的 appid 必须清空（保持空字符串 `""`）
+- GitHub 上必须保留一个 appid 为空的 `manifest.json`，否则项目无法编译运行
+- 本地开发时填入真实 appid，但提交前需还原为空值
+- 可在 `.gitignore` 中配合使用，或每次提交前手动检查该文件
+
 ## 开发铁律
 
 ### 1. 先查主项目，再写代码
