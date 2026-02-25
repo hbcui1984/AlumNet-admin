@@ -36,32 +36,36 @@
           <text class="value">{{ maskIdCard(detail.idCard) }}</text>
         </view>
         <view class="detail-item">
-          <text class="label">入学年份</text>
-          <text class="value">{{ detail.education?.enrollmentYear || '-' }}级</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">毕业年份</text>
-          <text class="value">{{ detail.education?.graduationYear ? detail.education.graduationYear + '年' : '-' }}</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">学院</text>
-          <text class="value">{{ detail.education?.college || '-' }}</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">专业</text>
-          <text class="value">{{ detail.education?.major || '-' }}</text>
-        </view>
-        <view class="detail-item">
           <text class="label">学历</text>
-          <text class="value">{{ detail.education?.degree || '-' }}</text>
+          <text class="value">{{ getDegreeText(detail.education?.degree) }}</text>
+        </view>
+        <view v-if="detail.education" class="detail-item">
+          <text class="label">学校名称</text>
+          <text class="value">{{ detail.education.schoolName || (detail.education.isLocal ? (detail.schoolName || '本校') : '-') }}</text>
         </view>
         <view class="detail-item">
+          <text class="label">入学年份</text>
+          <text class="value">{{ detail.education?.enrollmentYear ? detail.education.enrollmentYear + '级' : '-' }}</text>
+        </view>
+        <view v-if="detail.education?.graduationYear" class="detail-item">
+          <text class="label">毕业年份</text>
+          <text class="value">{{ detail.education.graduationYear }}年</text>
+        </view>
+        <view v-if="detail.education?.college" class="detail-item">
+          <text class="label">学院</text>
+          <text class="value">{{ detail.education.college }}</text>
+        </view>
+        <view v-if="detail.education?.major" class="detail-item">
+          <text class="label">专业</text>
+          <text class="value">{{ detail.education.major }}</text>
+        </view>
+        <view v-if="detail.education?.className" class="detail-item">
           <text class="label">班级</text>
-          <text class="value">{{ detail.education?.className || '-' }}</text>
+          <text class="value">{{ detail.education.className }}</text>
         </view>
-        <view class="detail-item">
+        <view v-if="detail.education?.studentId" class="detail-item">
           <text class="label">学号</text>
-          <text class="value">{{ detail.education?.studentId || '-' }}</text>
+          <text class="value">{{ detail.education.studentId }}</text>
         </view>
       </uni-card>
 
@@ -83,8 +87,12 @@
       </uni-card>
 
       <!-- 工作信息 -->
-      <uni-card v-if="detail.currentCompany || detail.currentPosition || detail.city"
+      <uni-card v-if="detail.workInfo || detail.currentCompany || detail.currentPosition || detail.city"
                 title="工作信息" :is-shadow="false" class="mt-20">
+        <view v-if="detail.workInfo" class="detail-item">
+          <text class="label">工作单位及职务</text>
+          <text class="value">{{ detail.workInfo }}</text>
+        </view>
         <view v-if="detail.currentCompany" class="detail-item">
           <text class="label">当前单位</text>
           <text class="value">{{ detail.currentCompany }}</text>
@@ -106,16 +114,43 @@
         </view>
       </uni-card>
 
-      <!-- 证明材料 -->
-      <uni-card title="证明材料" :is-shadow="false" class="mt-20">
-        <view v-if="detail.proofImages && detail.proofImages.length > 0" class="proof-images">
+      <!-- 近期照片 -->
+      <uni-card v-if="detail.cardPhotoUrl" title="近期照片" :is-shadow="false" class="mt-20">
+        <view class="photo-wrap">
           <image
-            v-for="(img, index) in detail.proofImages"
+            :src="detail.cardPhotoUrl"
+            class="card-photo"
+            mode="aspectFit"
+            @click="previewSingle(detail.cardPhotoUrl)"
+          />
+        </view>
+      </uni-card>
+
+      <!-- 学历证书 -->
+      <uni-card v-if="detail.diplomaUrls && detail.diplomaUrls.length > 0"
+                title="学历证书" :is-shadow="false" class="mt-20">
+        <view class="proof-images">
+          <image
+            v-for="(img, index) in detail.diplomaUrls"
             :key="index"
             :src="img"
             class="proof-image"
             mode="aspectFill"
-            @click="previewImage(index)"
+            @click="previewImages(detail.diplomaUrls, index)"
+          />
+        </view>
+      </uni-card>
+
+      <!-- 证明材料 -->
+      <uni-card title="证明材料" :is-shadow="false" class="mt-20">
+        <view v-if="detail.verifyProof && detail.verifyProof.length > 0" class="proof-images">
+          <image
+            v-for="(img, index) in detail.verifyProof"
+            :key="index"
+            :src="img"
+            class="proof-image"
+            mode="aspectFill"
+            @click="previewImages(detail.verifyProof, index)"
           />
         </view>
         <view v-else class="no-proof">
@@ -128,6 +163,10 @@
         <view class="detail-item">
           <text class="label">审核结果</text>
           <uni-tag :text="getStatusText(detail.status)" :type="getStatusType(detail.status)" />
+        </view>
+        <view v-if="detail.alumniVerifyMethod" class="detail-item">
+          <text class="label">认证方式</text>
+          <text class="value">{{ getVerifyMethodText(detail.alumniVerifyMethod) }}</text>
         </view>
         <view v-if="detail.alumniCardNo" class="detail-item">
           <text class="label">校友卡号</text>
@@ -211,11 +250,25 @@ export default {
         this.loading = false
       }
     },
-    previewImage(index) {
-      uni.previewImage({
-        urls: this.detail.proofImages,
-        current: index
-      })
+    previewSingle(url) {
+      uni.previewImage({ urls: [url], current: 0 })
+    },
+    previewImages(urls, index) {
+      uni.previewImage({ urls, current: index })
+    },
+    getVerifyMethodText(method) {
+      const map = { admin_review: '管理员审核', recommend: '校友推荐' }
+      return map[method] || method || '-'
+    },
+    getDegreeText(degree) {
+      const map = {
+        bachelor: '本科',
+        master: '硕士',
+        doctor: '博士',
+        highschool: '高中',
+        middleschool: '初中'
+      }
+      return map[degree] || degree || '-'
     },
     approveVerification() {
       uni.showModal({
@@ -396,6 +449,17 @@ export default {
 .proof-image {
   width: 120px;
   height: 120px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.photo-wrap {
+  display: flex;
+}
+
+.card-photo {
+  width: 160px;
+  height: 160px;
   border-radius: 8px;
   cursor: pointer;
 }
