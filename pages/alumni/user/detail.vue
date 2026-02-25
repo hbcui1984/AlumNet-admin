@@ -54,41 +54,156 @@
           <text class="label">性别</text>
           <text class="value">{{ getGenderText(detail.alumniInfo.gender) }}</text>
         </view>
-        <view class="detail-item">
-          <text class="label">入学年份</text>
-          <text class="value">{{ detail.alumniInfo.primaryEducation?.enrollmentYear || '-' }}级</text>
+        <view v-if="detail.alumniInfo.idCard" class="detail-item">
+          <text class="label">身份证号</text>
+          <text class="value">{{ maskIdCard(detail.alumniInfo.idCard) }}</text>
         </view>
-        <view class="detail-item">
-          <text class="label">学院</text>
-          <text class="value">{{ detail.alumniInfo.primaryEducation?.college || '-' }}</text>
+        <view v-if="detail.alumniInfo.alumniCardNo" class="detail-item">
+          <text class="label">校友卡号</text>
+          <text class="value card-no">{{ detail.alumniInfo.alumniCardNo }}</text>
         </view>
-        <view class="detail-item">
-          <text class="label">专业</text>
-          <text class="value">{{ detail.alumniInfo.primaryEducation?.major || '-' }}</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">当前公司</text>
-          <text class="value">{{ detail.alumniInfo.currentCompany || '-' }}</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">当前职位</text>
-          <text class="value">{{ detail.alumniInfo.currentPosition || '-' }}</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">所在城市</text>
-          <text class="value">{{ detail.alumniInfo.city || '-' }}</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">行业</text>
-          <text class="value">{{ detail.alumniInfo.industry || '-' }}</text>
+        <view v-if="detail.alumniInfo.alumniVerifyMethod" class="detail-item">
+          <text class="label">认证方式</text>
+          <text class="value">{{ getVerifyMethodText(detail.alumniInfo.alumniVerifyMethod) }}</text>
         </view>
       </uni-card>
 
-      <!-- 认证信息 -->
+      <!-- 教育经历 -->
+      <uni-card v-if="detail.alumniInfo && detail.alumniInfo.educations && detail.alumniInfo.educations.length > 0"
+                title="教育经历" :is-shadow="false" class="mt-20">
+        <view v-for="(edu, index) in detail.alumniInfo.educations" :key="index" class="edu-item">
+          <view class="edu-header">
+            <text class="edu-title">{{ getDegreeText(edu.degree) }}</text>
+            <uni-tag v-if="edu.isPrimary" text="主要学历" type="primary" size="small" />
+          </view>
+          <view class="detail-item">
+            <text class="label">学校名称</text>
+            <text class="value">{{ edu.isLocal ? (detail.schoolName || '本校') : (edu.schoolName || '-') }}</text>
+          </view>
+          <view class="detail-item">
+            <text class="label">入学年份</text>
+            <text class="value">{{ edu.enrollmentYear ? edu.enrollmentYear + '级' : '-' }}</text>
+          </view>
+          <view v-if="edu.graduationYear" class="detail-item">
+            <text class="label">毕业年份</text>
+            <text class="value">{{ edu.graduationYear }}年</text>
+          </view>
+          <view v-if="edu.college" class="detail-item">
+            <text class="label">学院</text>
+            <text class="value">{{ edu.college }}</text>
+          </view>
+          <view v-if="edu.major" class="detail-item">
+            <text class="label">专业</text>
+            <text class="value">{{ edu.major }}</text>
+          </view>
+          <view v-if="edu.className" class="detail-item">
+            <text class="label">班级</text>
+            <text class="value">{{ edu.className }}</text>
+          </view>
+          <view v-if="edu.studentId" class="detail-item">
+            <text class="label">学号</text>
+            <text class="value">{{ edu.studentId }}</text>
+          </view>
+          <view v-if="edu.headTeacher" class="detail-item">
+            <text class="label">班主任</text>
+            <text class="value">{{ edu.headTeacher }}</text>
+          </view>
+          <view v-if="edu.middleSchool" class="detail-item">
+            <text class="label">初中毕业学校</text>
+            <text class="value">{{ edu.middleSchool }}</text>
+          </view>
+          <view v-if="edu.teachers" class="detail-item">
+            <text class="label">任课老师</text>
+            <text class="value">{{ edu.teachers }}</text>
+          </view>
+        </view>
+      </uni-card>
+
+      <!-- 工作与生活信息 -->
+      <uni-card v-if="detail.alumniInfo && (detail.alumniInfo.workInfo || detail.alumniInfo.currentCompany || detail.alumniInfo.currentPosition || detail.alumniInfo.city || detail.alumniInfo.industry)"
+                title="工作与生活" :is-shadow="false" class="mt-20">
+        <view v-if="detail.alumniInfo.workInfo" class="detail-item">
+          <text class="label">工作单位及职务</text>
+          <text class="value">{{ detail.alumniInfo.workInfo }}</text>
+        </view>
+        <view v-if="detail.alumniInfo.currentCompany" class="detail-item">
+          <text class="label">当前公司</text>
+          <text class="value">{{ detail.alumniInfo.currentCompany }}</text>
+        </view>
+        <view v-if="detail.alumniInfo.currentPosition" class="detail-item">
+          <text class="label">当前职位</text>
+          <text class="value">{{ detail.alumniInfo.currentPosition }}</text>
+        </view>
+        <view v-if="detail.alumniInfo.city" class="detail-item">
+          <text class="label">所在城市</text>
+          <text class="value">{{ detail.alumniInfo.city }}</text>
+        </view>
+        <view v-if="detail.alumniInfo.industry" class="detail-item">
+          <text class="label">行业</text>
+          <text class="value">{{ detail.alumniInfo.industry }}</text>
+        </view>
+      </uni-card>
+
+      <!-- 近期照片 -->
+      <uni-card v-if="detail.alumniInfo && detail.alumniInfo.cardPhotoUrl"
+                title="近期照片" :is-shadow="false" class="mt-20">
+        <view class="photo-wrap">
+          <image
+            :src="detail.alumniInfo.cardPhotoUrl"
+            class="card-photo"
+            mode="aspectFit"
+            @click="previewSingle(detail.alumniInfo.cardPhotoUrl)"
+          />
+        </view>
+      </uni-card>
+
+      <!-- 学历证书 -->
+      <uni-card v-if="detail.alumniInfo && detail.alumniInfo.diplomaUrls && detail.alumniInfo.diplomaUrls.length > 0"
+                title="学历证书" :is-shadow="false" class="mt-20">
+        <view class="proof-images">
+          <image
+            v-for="(img, index) in detail.alumniInfo.diplomaUrls"
+            :key="index"
+            :src="img"
+            class="proof-image"
+            mode="aspectFill"
+            @click="previewImages(detail.alumniInfo.diplomaUrls, index)"
+          />
+        </view>
+      </uni-card>
+
+      <!-- 证明材料 -->
+      <uni-card v-if="detail.alumniInfo && detail.alumniInfo.verifyProof && detail.alumniInfo.verifyProof.length > 0"
+                title="证明材料" :is-shadow="false" class="mt-20">
+        <view class="proof-images">
+          <image
+            v-for="(img, index) in detail.alumniInfo.verifyProof"
+            :key="index"
+            :src="img"
+            class="proof-image"
+            mode="aspectFill"
+            @click="previewImages(detail.alumniInfo.verifyProof, index)"
+          />
+        </view>
+      </uni-card>
+
+      <!-- 对母校寄语 -->
+      <uni-card v-if="detail.alumniInfo && detail.alumniInfo.messageToSchool"
+                title="对母校寄语" :is-shadow="false" class="mt-20">
+        <view class="message-content">
+          <text>{{ detail.alumniInfo.messageToSchool }}</text>
+        </view>
+      </uni-card>
+
+      <!-- 认证记录 -->
       <uni-card v-if="detail.verificationInfo" title="认证记录" :is-shadow="false" class="mt-20">
         <view class="detail-item">
           <text class="label">认证状态</text>
           <uni-tag :text="getVerifyStatusText(detail.verificationInfo.status)" :type="getVerifyStatusType(detail.verificationInfo.status)" size="small" />
+        </view>
+        <view v-if="detail.verificationInfo.alumniVerifyMethod" class="detail-item">
+          <text class="label">认证方式</text>
+          <text class="value">{{ getVerifyMethodText(detail.verificationInfo.alumniVerifyMethod) }}</text>
         </view>
         <view class="detail-item">
           <text class="label">提交时间</text>
@@ -201,6 +316,30 @@ export default {
         uni.showToast({ title: '操作失败', icon: 'none' })
       }
     },
+    previewSingle(url) {
+      uni.previewImage({ urls: [url], current: 0 })
+    },
+    previewImages(urls, index) {
+      uni.previewImage({ urls, current: index })
+    },
+    maskIdCard(idCard) {
+      if (!idCard || idCard.length < 10) return idCard
+      return idCard.substring(0, 6) + '********' + idCard.substring(idCard.length - 4)
+    },
+    getDegreeText(degree) {
+      const map = {
+        bachelor: '本科',
+        master: '硕士',
+        doctor: '博士',
+        highschool: '高中',
+        middleschool: '初中'
+      }
+      return map[degree] || degree || '未知学历'
+    },
+    getVerifyMethodText(method) {
+      const map = { admin_review: '管理员审核', recommend: '校友推荐' }
+      return map[method] || method || '-'
+    },
     getGenderText(gender) {
       const map = { 1: '男', 2: '女' }
       return map[gender] || '未知'
@@ -292,7 +431,7 @@ export default {
 }
 
 .detail-item .label {
-  width: 100px;
+  width: 120px;
   color: #999;
   flex-shrink: 0;
 }
@@ -304,6 +443,72 @@ export default {
 
 .detail-item .value.reject {
   color: #E74C3C;
+}
+
+.detail-item .card-no {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #2E5C8A;
+  letter-spacing: 1px;
+}
+
+.edu-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.edu-item:last-child {
+  border-bottom: none;
+}
+
+.edu-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.edu-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+}
+
+.edu-item .detail-item {
+  padding: 6px 0;
+}
+
+.photo-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.card-photo {
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.proof-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.proof-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.message-content {
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  line-height: 1.6;
+  color: #666;
 }
 
 .action-bar {
