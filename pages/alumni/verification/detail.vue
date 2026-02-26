@@ -35,54 +35,80 @@
           <text class="label">身份证号</text>
           <text class="value">{{ maskIdCard(detail.idCard) }}</text>
         </view>
-        <view class="detail-item">
-          <text class="label">学历</text>
-          <text class="value">{{ getDegreeText(detail.education?.degree) }}</text>
+      </uni-card>
+
+      <!-- 本校学历 -->
+      <uni-card title="本校学历" :is-shadow="false" class="mt-20">
+        <view v-if="localEducations.length === 0" class="no-proof">
+          <text>暂无本校学历信息</text>
         </view>
-        <view v-if="detail.education" class="detail-item">
-          <text class="label">学校名称</text>
-          <text class="value">{{ detail.education.schoolName || (detail.education.isLocal ? (detail.schoolName || '本校') : '-') }}</text>
-        </view>
-        <view class="detail-item">
-          <text class="label">入学年份</text>
-          <text class="value">{{ detail.education?.enrollmentYear ? detail.education.enrollmentYear + '级' : '-' }}</text>
-        </view>
-        <view v-if="detail.education?.graduationYear" class="detail-item">
-          <text class="label">毕业年份</text>
-          <text class="value">{{ detail.education.graduationYear }}年</text>
-        </view>
-        <view v-if="detail.education?.college" class="detail-item">
-          <text class="label">学院</text>
-          <text class="value">{{ detail.education.college }}</text>
-        </view>
-        <view v-if="detail.education?.major" class="detail-item">
-          <text class="label">专业</text>
-          <text class="value">{{ detail.education.major }}</text>
-        </view>
-        <view v-if="detail.education?.className" class="detail-item">
-          <text class="label">班级</text>
-          <text class="value">{{ detail.education.className }}</text>
-        </view>
-        <view v-if="detail.education?.studentId" class="detail-item">
-          <text class="label">学号</text>
-          <text class="value">{{ detail.education.studentId }}</text>
+        <view v-for="(edu, index) in localEducations" :key="index" class="edu-block">
+          <view class="edu-block-title">
+            <text class="edu-degree-tag">{{ getDegreeText(edu.degree) }}</text>
+            <text v-if="index === 0" class="edu-primary-tag">主要</text>
+          </view>
+          <view class="detail-item">
+            <text class="label">入学年份</text>
+            <text class="value">{{ edu.enrollmentYear ? edu.enrollmentYear + '级' : '-' }}</text>
+          </view>
+          <view v-if="edu.graduationYear" class="detail-item">
+            <text class="label">毕业年份</text>
+            <text class="value">{{ edu.graduationYear }}年</text>
+          </view>
+          <view v-if="edu.college" class="detail-item">
+            <text class="label">学院</text>
+            <text class="value">{{ edu.college }}</text>
+          </view>
+          <view v-if="edu.major" class="detail-item">
+            <text class="label">专业</text>
+            <text class="value">{{ edu.major }}</text>
+          </view>
+          <view v-if="edu.className" class="detail-item">
+            <text class="label">班级</text>
+            <text class="value">{{ edu.className }}</text>
+          </view>
+          <view v-if="edu.headTeacher" class="detail-item">
+            <text class="label">班主任</text>
+            <text class="value">{{ edu.headTeacher }}</text>
+          </view>
+          <view v-if="edu.middleSchool" class="detail-item">
+            <text class="label">初中毕业学校</text>
+            <text class="value">{{ edu.middleSchool }}</text>
+          </view>
+          <view v-if="edu.teachers" class="detail-item">
+            <text class="label">任课老师</text>
+            <text class="value">{{ edu.teachers }}</text>
+          </view>
+          <view v-if="edu.studentId" class="detail-item">
+            <text class="label">学号</text>
+            <text class="value">{{ edu.studentId }}</text>
+          </view>
         </view>
       </uni-card>
 
-      <!-- 高中特有信息 -->
-      <uni-card v-if="detail.classTeacher || detail.middleSchool || (detail.teachers && detail.teachers.length > 0)"
-                title="高中信息" :is-shadow="false" class="mt-20">
-        <view v-if="detail.classTeacher" class="detail-item">
-          <text class="label">高三班主任</text>
-          <text class="value">{{ detail.classTeacher }}</text>
-        </view>
-        <view v-if="detail.middleSchool" class="detail-item">
-          <text class="label">初中毕业学校</text>
-          <text class="value">{{ detail.middleSchool }}</text>
-        </view>
-        <view v-if="detail.teachers && detail.teachers.length > 0" class="detail-item">
-          <text class="label">任课老师</text>
-          <text class="value">{{ detail.teachers.join('、') }}</text>
+      <!-- 其他学历 -->
+      <uni-card v-if="otherEducations.length > 0" title="其他学历" :is-shadow="false" class="mt-20">
+        <view v-for="(edu, index) in otherEducations" :key="index" class="edu-block">
+          <view class="edu-block-title">
+            <text class="edu-degree-tag">{{ getDegreeText(edu.degree) }}</text>
+            <text class="edu-school-name">{{ edu.schoolName }}</text>
+          </view>
+          <view class="detail-item">
+            <text class="label">入学年份</text>
+            <text class="value">{{ edu.enrollmentYear ? edu.enrollmentYear + '级' : '-' }}</text>
+          </view>
+          <view v-if="edu.graduationYear" class="detail-item">
+            <text class="label">毕业年份</text>
+            <text class="value">{{ edu.graduationYear }}年</text>
+          </view>
+          <view v-if="edu.college" class="detail-item">
+            <text class="label">学院</text>
+            <text class="value">{{ edu.college }}</text>
+          </view>
+          <view v-if="edu.major" class="detail-item">
+            <text class="label">专业</text>
+            <text class="value">{{ edu.major }}</text>
+          </view>
         </view>
       </uni-card>
 
@@ -225,6 +251,16 @@ export default {
       loading: false,
       detail: {},
       rejectReason: ''
+    }
+  },
+  computed: {
+    localEducations() {
+      if (!this.detail.educations) return []
+      return this.detail.educations.filter(e => e.isLocal !== false)
+    },
+    otherEducations() {
+      if (!this.detail.educations) return []
+      return this.detail.educations.filter(e => e.isLocal === false)
     }
   },
   onLoad(options) {
@@ -489,5 +525,44 @@ export default {
   margin-bottom: 10px;
   color: #666;
   font-size: 14px;
+}
+
+.edu-block {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.edu-block:last-child {
+  border-bottom: none;
+}
+
+.edu-block-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.edu-degree-tag {
+  font-size: 14px;
+  font-weight: bold;
+  color: #2B5CE6;
+  background-color: rgba(43, 92, 230, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.edu-primary-tag {
+  font-size: 12px;
+  color: #fff;
+  background-color: #F39C12;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.edu-school-name {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
 }
 </style>
