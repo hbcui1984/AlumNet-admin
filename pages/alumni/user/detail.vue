@@ -68,17 +68,13 @@
         </view>
       </uni-card>
 
-      <!-- 教育经历 -->
-      <uni-card v-if="detail.alumniInfo && detail.alumniInfo.educations && detail.alumniInfo.educations.length > 0"
-                title="教育经历" :is-shadow="false" class="mt-20">
-        <view v-for="(edu, index) in detail.alumniInfo.educations" :key="index" class="edu-item">
+      <!-- 本校学历 -->
+      <uni-card v-if="detail.alumniInfo && localEducations.length > 0"
+                title="本校学历" :is-shadow="false" class="mt-20">
+        <view v-for="(edu, index) in localEducations" :key="index" class="edu-item">
           <view class="edu-header">
-            <text class="edu-title">{{ getDegreeText(edu.degree) }}</text>
-            <uni-tag v-if="edu.isPrimary" text="主要学历" type="primary" size="small" />
-          </view>
-          <view class="detail-item">
-            <text class="label">学校名称</text>
-            <text class="value">{{ edu.isLocal ? (detail.schoolName || '本校') : (edu.schoolName || '-') }}</text>
+            <text class="edu-degree-tag">{{ getDegreeText(edu.degree) }}</text>
+            <text v-if="index === 0" class="edu-primary-tag">主要</text>
           </view>
           <view class="detail-item">
             <text class="label">入学年份</text>
@@ -100,10 +96,6 @@
             <text class="label">班级</text>
             <text class="value">{{ edu.className }}</text>
           </view>
-          <view v-if="edu.studentId" class="detail-item">
-            <text class="label">学号</text>
-            <text class="value">{{ edu.studentId }}</text>
-          </view>
           <view v-if="edu.headTeacher" class="detail-item">
             <text class="label">班主任</text>
             <text class="value">{{ edu.headTeacher }}</text>
@@ -115,6 +107,37 @@
           <view v-if="edu.teachers" class="detail-item">
             <text class="label">任课老师</text>
             <text class="value">{{ edu.teachers }}</text>
+          </view>
+          <view v-if="edu.studentId" class="detail-item">
+            <text class="label">学号</text>
+            <text class="value">{{ edu.studentId }}</text>
+          </view>
+        </view>
+      </uni-card>
+
+      <!-- 其他学历 -->
+      <uni-card v-if="detail.alumniInfo && otherEducations.length > 0"
+                title="其他学历" :is-shadow="false" class="mt-20">
+        <view v-for="(edu, index) in otherEducations" :key="index" class="edu-item">
+          <view class="edu-header">
+            <text class="edu-degree-tag">{{ getDegreeText(edu.degree) }}</text>
+            <text class="edu-school-name">{{ edu.schoolName }}</text>
+          </view>
+          <view class="detail-item">
+            <text class="label">入学年份</text>
+            <text class="value">{{ edu.enrollmentYear ? edu.enrollmentYear + '级' : '-' }}</text>
+          </view>
+          <view v-if="edu.graduationYear" class="detail-item">
+            <text class="label">毕业年份</text>
+            <text class="value">{{ edu.graduationYear }}年</text>
+          </view>
+          <view v-if="edu.college" class="detail-item">
+            <text class="label">学院</text>
+            <text class="value">{{ edu.college }}</text>
+          </view>
+          <view v-if="edu.major" class="detail-item">
+            <text class="label">专业</text>
+            <text class="value">{{ edu.major }}</text>
           </view>
         </view>
       </uni-card>
@@ -260,6 +283,16 @@ export default {
       loading: false,
       detail: {},
       newStatus: 0
+    }
+  },
+  computed: {
+    localEducations() {
+      const educations = this.detail.alumniInfo?.educations || []
+      return educations.filter(e => e.isLocal !== false)
+    },
+    otherEducations() {
+      const educations = this.detail.alumniInfo?.educations || []
+      return educations.filter(e => e.isLocal === false)
     }
   },
   onLoad(options) {
@@ -533,5 +566,28 @@ export default {
 
 .status-option text {
   margin-left: 8px;
+}
+
+.edu-degree-tag {
+  font-size: 13px;
+  font-weight: bold;
+  color: #2B5CE6;
+  background-color: rgba(43, 92, 230, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.edu-primary-tag {
+  font-size: 12px;
+  color: #fff;
+  background-color: #F39C12;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.edu-school-name {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
 }
 </style>
