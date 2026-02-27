@@ -21,7 +21,7 @@
           <uni-icons type="auth-filled" size="24" color="#fff"></uni-icons>
         </view>
         <view class="stat-info">
-          <text class="stat-value">{{ stats.verifiedAlumni || 0 }}</text>
+          <text class="stat-value">{{ stats.verifiedUsers || 0 }}</text>
           <text class="stat-label">认证校友</text>
         </view>
       </view>
@@ -30,7 +30,7 @@
           <uni-icons type="clock-filled" size="24" color="#fff"></uni-icons>
         </view>
         <view class="stat-info">
-          <text class="stat-value">{{ stats.pendingVerification || 0 }}</text>
+          <text class="stat-value">{{ stats.pendingVerify || 0 }}</text>
           <text class="stat-label">待审核</text>
         </view>
       </view>
@@ -151,8 +151,8 @@ export default {
       loading: false,
       stats: {
         totalUsers: 0,
-        verifiedAlumni: 0,
-        pendingVerification: 0,
+        verifiedUsers: 0,
+        pendingVerify: 0,
         todayNewUsers: 0
       },
       growthData: [],
