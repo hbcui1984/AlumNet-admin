@@ -45,7 +45,6 @@
         <view v-for="(edu, index) in localEducations" :key="index" class="edu-block">
           <view class="edu-block-title">
             <text class="edu-degree-tag">{{ getDegreeText(edu.degree) }}</text>
-            <text v-if="index === 0" class="edu-primary-tag">主要</text>
           </view>
           <view class="detail-item">
             <text class="label">入学年份</text>
