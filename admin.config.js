@@ -38,46 +38,8 @@ export default {
 			}]
 		}
 	},
-	sideBar: { // 左侧菜单
-		// 配置静态菜单列表（放置在用户被授权的菜单列表下边）
-		staticMenu: [{
-			menu_id: "demo",
-			text: '静态功能演示',
-			icon: 'admin-icons-kaifashili',
-			url: "",
-			children: [{
-				menu_id: "icons",
-				text: '图标',
-				icon: 'admin-icons-icon',
-				value: '/pages/demo/icons/icons',
-			}, {
-				menu_id: "table",
-				text: '表格',
-				icon: 'admin-icons-table',
-				value: '/pages/demo/table/table',
-			}]
-		}, {
-			menu_id: "admim-doc-pulgin",
-			text: '文档与插件',
-			icon: 'admin-icons-eco',
-			url: "",
-			children: [{
-				menu_id: "admin-doc",
-				icon: 'admin-icons-doc',
-				text: 'uni-admin 框架文档',
-				value: 'https://uniapp.dcloud.net.cn/uniCloud/admin'
-			}, {
-				menu_id: "stat-doc",
-				icon: 'admin-icons-help',
-				text: 'uni 统计教程',
-				value: 'https://uniapp.dcloud.net.cn/uni-stat-v2.html'
-			}, {
-				menu_id: "admin-pulgin",
-				icon: 'admin-icons-pulgin',
-				text: 'uni-admin 插件',
-				value: 'https://ext.dcloud.net.cn/?cat1=7&cat2=74'
-			}]
-		}]
+	sideBar: {
+		staticMenu: []
 	},
 	uniStat: {
 		
