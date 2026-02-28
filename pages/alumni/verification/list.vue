@@ -35,7 +35,7 @@
         <uni-th width="70" align="center">性别</uni-th>
         <uni-th width="100" align="center">入学年份</uni-th>
         <uni-th width="100" align="center">班级</uni-th>
-        <uni-th width="130" align="center">学院</uni-th>
+        <uni-th v-if="showCollege" width="130" align="center">学院</uni-th>
         <uni-th width="100" align="center">状态</uni-th>
         <uni-th width="130" align="center">提交时间</uni-th>
         <uni-th width="120" align="center">操作</uni-th>
@@ -43,9 +43,9 @@
       <uni-tr v-for="item in list" :key="item._id">
         <uni-td align="center">{{ item.realName || '-' }}</uni-td>
         <uni-td align="center">{{ getGenderText(item.gender) }}</uni-td>
-        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'enrollmentYear') ? getPrimaryEdu(item.educations, 'enrollmentYear') + '级' : '-' }}</uni-td>
+        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'enrollmentYear') || '-' }}</uni-td>
         <uni-td align="center">{{ getPrimaryEdu(item.educations, 'className') || '-' }}</uni-td>
-        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'college') || '-' }}</uni-td>
+        <uni-td v-if="showCollege" align="center">{{ getPrimaryEdu(item.educations, 'college') || '-' }}</uni-td>
         <uni-td align="center">
           <uni-tag :text="getStatusText(item.status)" :type="getStatusType(item.status)" size="small" />
         </uni-td>
@@ -106,6 +106,7 @@ export default {
       pageSize: 20,
       filterStatus: '',
       keyword: '',
+      showCollege: false,
       stats: { pending: 0, approved: 0, rejected: 0 },
       statusOptions: [
         { value: '', text: '全部状态' },
@@ -119,9 +120,19 @@ export default {
     }
   },
   onLoad() {
+    this.loadSchoolConfig()
     this.loadList()
   },
   methods: {
+    async loadSchoolConfig() {
+      try {
+        const res = await alumniAdminCo.getSchoolConfig()
+        if (res.errCode === 0) {
+          const localDegrees = res.data.localDegrees || []
+          this.showCollege = localDegrees.some(d => ['bachelor', 'master', 'doctor'].includes(d))
+        }
+      } catch (e) {}
+    },
     async loadList() {
       this.loading = true
       try {
