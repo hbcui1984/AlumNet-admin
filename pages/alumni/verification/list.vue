@@ -32,16 +32,20 @@
     <uni-table stripe emptyText="暂无数据" :loading="loading">
       <uni-tr>
         <uni-th width="100" align="center">姓名</uni-th>
-        <uni-th width="80" align="center">性别</uni-th>
-        <uni-th align="left">学历信息</uni-th>
+        <uni-th width="70" align="center">性别</uni-th>
+        <uni-th width="100" align="center">入学年份</uni-th>
+        <uni-th width="100" align="center">班级</uni-th>
+        <uni-th width="130" align="center">学院</uni-th>
         <uni-th width="100" align="center">状态</uni-th>
-        <uni-th width="150" align="center">提交时间</uni-th>
+        <uni-th width="130" align="center">提交时间</uni-th>
         <uni-th width="120" align="center">操作</uni-th>
       </uni-tr>
       <uni-tr v-for="item in list" :key="item._id">
         <uni-td align="center">{{ item.realName || '-' }}</uni-td>
         <uni-td align="center">{{ getGenderText(item.gender) }}</uni-td>
-        <uni-td align="left">{{ getEduSummary(item.educations) }}</uni-td>
+        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'enrollmentYear') ? getPrimaryEdu(item.educations, 'enrollmentYear') + '级' : '-' }}</uni-td>
+        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'className') || '-' }}</uni-td>
+        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'college') || '-' }}</uni-td>
         <uni-td align="center">
           <uni-tag :text="getStatusText(item.status)" :type="getStatusType(item.status)" size="small" />
         </uni-td>
@@ -66,7 +70,7 @@
         <view class="review-content">
           <view class="review-info">
             <text>申请人：{{ currentItem?.realName }}</text>
-            <text>学历：{{ getEduSummary(currentItem?.educations) }}</text>
+            <text v-if="getPrimaryEdu(currentItem?.educations, 'enrollmentYear')">入学年份：{{ getPrimaryEdu(currentItem?.educations, 'enrollmentYear') }}级</text>
           </view>
           <view class="review-actions">
             <radio-group @change="onReviewChange">
@@ -91,8 +95,6 @@
 
 <script>
 const alumniAdminCo = uniCloud.importObject('alumni-admin-co')
-
-const DEGREE_TEXT = { bachelor: '本科', master: '硕士', doctor: '博士', highschool: '高中', middleschool: '初中' }
 
 export default {
   data() {
@@ -197,17 +199,10 @@ export default {
         uni.showToast({ title: '操作失败', icon: 'none' })
       }
     },
-    getEduSummary(educations) {
-      if (!educations || educations.length === 0) return '-'
+    getPrimaryEdu(educations, field) {
+      if (!educations || educations.length === 0) return null
       const local = educations.find(e => e.isLocal !== false) || educations[0]
-      const parts = [DEGREE_TEXT[local.degree] || local.degree]
-      if (local.enrollmentYear) parts.push(local.enrollmentYear + '级')
-      if (local.className) parts.push(local.className + '班')
-      else if (local.college) parts.push(local.college)
-      if (local.major) parts.push(local.major)
-      const localCount = educations.filter(e => e.isLocal !== false).length
-      if (localCount > 1) parts.push(`等${localCount}个学历`)
-      return parts.join(' · ')
+      return local[field] || null
     },
     getGenderText(gender) {
       const map = { 1: '男', 2: '女' }
