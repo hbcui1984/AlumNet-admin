@@ -8,35 +8,26 @@
     <!-- 筛选栏 -->
     <view class="filter-bar">
       <uni-data-select v-model="filterStatus" :localdata="statusOptions" placeholder="全部状态" @change="onFilterChange" />
-      <uni-easyinput v-model="keyword" placeholder="搜索昵称/手机号/用户名" prefixIcon="search" @confirm="onSearch" />
+      <uni-easyinput v-model="keyword" placeholder="搜索姓名/手机号" prefixIcon="search" @confirm="onSearch" />
       <button type="primary" size="mini" @click="onSearch">搜索</button>
-      <button type="default" size="mini" @click="exportData">导出</button>
     </view>
 
     <!-- 列表 -->
     <uni-table stripe emptyText="暂无数据" :loading="loading">
       <uni-tr>
-        <uni-th width="80" align="center">头像</uni-th>
-        <uni-th width="120" align="center">昵称</uni-th>
-        <uni-th width="120" align="center">用户名</uni-th>
-        <uni-th width="130" align="center">手机号</uni-th>
+        <uni-th width="100" align="center">姓名</uni-th>
+        <uni-th align="left">学历信息</uni-th>
         <uni-th width="100" align="center">校友状态</uni-th>
-        <uni-th width="150" align="center">注册时间</uni-th>
-        <uni-th width="150" align="center">最后登录</uni-th>
-        <uni-th width="150" align="center">操作</uni-th>
+        <uni-th width="130" align="center">注册时间</uni-th>
+        <uni-th width="120" align="center">操作</uni-th>
       </uni-tr>
       <uni-tr v-for="item in list" :key="item._id">
-        <uni-td align="center">
-          <image :src="item.avatar || '/static/default-avatar.png'" class="user-avatar" mode="aspectFill" />
-        </uni-td>
-        <uni-td align="center">{{ item.nickname || '-' }}</uni-td>
-        <uni-td align="center">{{ item.username || '-' }}</uni-td>
-        <uni-td align="center">{{ item.mobile || '-' }}</uni-td>
+        <uni-td align="center">{{ item.realName || '-' }}</uni-td>
+        <uni-td align="left">{{ getEduSummary(item.educations) }}</uni-td>
         <uni-td align="center">
           <uni-tag :text="getStatusText(item.alumniStatus)" :type="getStatusType(item.alumniStatus)" size="small" />
         </uni-td>
         <uni-td align="center">{{ formatDate(item.register_date) }}</uni-td>
-        <uni-td align="center">{{ formatDate(item.last_login_date) }}</uni-td>
         <uni-td align="center">
           <view class="action-btns">
             <button type="primary" size="mini" @click="viewDetail(item._id)">详情</button>
@@ -56,7 +47,7 @@
       <uni-popup-dialog type="info" title="修改校友状态" :before-close="true" @close="closeStatusPopup" @confirm="confirmStatus">
         <view class="status-content">
           <view class="status-info">
-            <text>用户：{{ currentItem?.nickname || currentItem?.username || '未知' }}</text>
+            <text>用户：{{ currentItem?.realName || '未知' }}</text>
           </view>
           <view class="status-options">
             <radio-group @change="onStatusChange">
@@ -82,6 +73,8 @@
 
 <script>
 const alumniAdminCo = uniCloud.importObject('alumni-admin-co')
+
+const DEGREE_TEXT = { bachelor: '本科', master: '硕士', doctor: '博士', highschool: '高中', middleschool: '初中' }
 
 export default {
   data() {
@@ -121,38 +114,36 @@ export default {
           this.total = res.data.total
         }
       } catch (e) {
-        console.error('加载列表失败', e)
         uni.showToast({ title: '加载失败', icon: 'none' })
       } finally {
         this.loading = false
       }
     },
-    onFilterChange() {
-      this.page = 1
-      this.loadList()
+    getEduSummary(educations) {
+      if (!educations || educations.length === 0) return '-'
+      // 取第一条本校学历（已按学历权重排序）
+      const local = educations.find(e => e.isLocal !== false) || educations[0]
+      const parts = [DEGREE_TEXT[local.degree] || local.degree]
+      if (local.enrollmentYear) parts.push(local.enrollmentYear + '级')
+      if (local.className) parts.push(local.className + '班')
+      else if (local.college) parts.push(local.college)
+      if (local.major) parts.push(local.major)
+      // 多条本校学历时追加数量提示
+      const localCount = educations.filter(e => e.isLocal !== false).length
+      if (localCount > 1) parts.push(`等${localCount}个学历`)
+      return parts.join(' · ')
     },
-    onSearch() {
-      this.page = 1
-      this.loadList()
-    },
-    onPageChange(e) {
-      this.page = e.current
-      this.loadList()
-    },
-    viewDetail(id) {
-      uni.navigateTo({ url: `/pages/alumni/user/detail?id=${id}` })
-    },
+    onFilterChange() { this.page = 1; this.loadList() },
+    onSearch() { this.page = 1; this.loadList() },
+    onPageChange(e) { this.page = e.current; this.loadList() },
+    viewDetail(id) { uni.navigateTo({ url: `/pages/alumni/user/detail?id=${id}` }) },
     changeStatus(item) {
       this.currentItem = item
       this.newStatus = item.alumniStatus || 0
       this.$refs.statusPopup.open()
     },
-    closeStatusPopup() {
-      this.$refs.statusPopup.close()
-    },
-    onStatusChange(e) {
-      this.newStatus = parseInt(e.detail.value)
-    },
+    closeStatusPopup() { this.$refs.statusPopup.close() },
+    onStatusChange(e) { this.newStatus = parseInt(e.detail.value) },
     async confirmStatus() {
       try {
         const res = await alumniAdminCo.updateAlumniStatus({
@@ -167,25 +158,19 @@ export default {
           uni.showToast({ title: res.errMsg || '操作失败', icon: 'none' })
         }
       } catch (e) {
-        console.error('更新状态失败', e)
         uni.showToast({ title: '操作失败', icon: 'none' })
       }
     },
-    exportData() {
-      uni.showToast({ title: '导出功能开发中', icon: 'none' })
-    },
     getStatusText(status) {
-      const map = { 0: '未认证', 1: '已认证', 2: '已禁用' }
-      return map[status] || '未认证'
+      return { 0: '未认证', 1: '已认证', 2: '已禁用' }[status] || '未认证'
     },
     getStatusType(status) {
-      const map = { 0: 'default', 1: 'success', 2: 'error' }
-      return map[status] || 'default'
+      return { 0: 'default', 1: 'success', 2: 'error' }[status] || 'default'
     },
     formatDate(timestamp) {
       if (!timestamp) return '-'
-      const date = new Date(timestamp)
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+      const d = new Date(timestamp)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     }
   }
 }
@@ -197,25 +182,9 @@ export default {
   background-color: #f5f5f5;
   min-height: 100vh;
 }
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  display: block;
-}
-
-.page-desc {
-  font-size: 14px;
-  color: #999;
-  margin-top: 8px;
-  display: block;
-}
-
+.page-header { margin-bottom: 20px; }
+.page-title { font-size: 24px; font-weight: bold; color: #333; display: block; }
+.page-desc { font-size: 14px; color: #999; margin-top: 8px; display: block; }
 .filter-bar {
   display: flex;
   gap: 15px;
@@ -224,45 +193,10 @@ export default {
   padding: 15px;
   border-radius: 8px;
 }
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.action-btns {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.status-content {
-  padding: 15px 0;
-}
-
-.status-info {
-  margin-bottom: 15px;
-  color: #666;
-}
-
-.status-options {
-  margin-top: 10px;
-}
-
-.status-option {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.status-option text {
-  margin-left: 8px;
-}
+.action-btns { display: flex; gap: 8px; justify-content: center; }
+.pagination { margin-top: 20px; display: flex; justify-content: flex-end; }
+.status-content { padding: 15px 0; }
+.status-info { margin-bottom: 15px; color: #666; }
+.status-option { display: flex; align-items: center; margin-bottom: 10px; }
+.status-option text { margin-left: 8px; }
 </style>
