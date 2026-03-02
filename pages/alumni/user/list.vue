@@ -16,14 +16,18 @@
     <uni-table stripe emptyText="暂无数据" :loading="loading">
       <uni-tr>
         <uni-th width="100" align="center">姓名</uni-th>
-        <uni-th align="left">学历信息</uni-th>
+        <uni-th width="70" align="center">性别</uni-th>
+        <uni-th width="100" align="center">入学年份</uni-th>
+        <uni-th width="100" align="center">班级</uni-th>
         <uni-th width="100" align="center">校友状态</uni-th>
         <uni-th width="130" align="center">注册时间</uni-th>
         <uni-th width="120" align="center">操作</uni-th>
       </uni-tr>
       <uni-tr v-for="item in list" :key="item._id">
         <uni-td align="center">{{ item.realName || '-' }}</uni-td>
-        <uni-td align="left">{{ getEduSummary(item.educations) }}</uni-td>
+        <uni-td align="center">{{ getGenderText(item.gender) }}</uni-td>
+        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'enrollmentYear') || '-' }}</uni-td>
+        <uni-td align="center">{{ getPrimaryEdu(item.educations, 'className') || '-' }}</uni-td>
         <uni-td align="center">
           <uni-tag :text="getStatusText(item.alumniStatus)" :type="getStatusType(item.alumniStatus)" size="small" />
         </uni-td>
@@ -74,8 +78,6 @@
 <script>
 const alumniAdminCo = uniCloud.importObject('alumni-admin-co')
 
-const DEGREE_TEXT = { bachelor: '本科', master: '硕士', doctor: '博士', highschool: '高中', middleschool: '初中' }
-
 export default {
   data() {
     return {
@@ -119,19 +121,13 @@ export default {
         this.loading = false
       }
     },
-    getEduSummary(educations) {
-      if (!educations || educations.length === 0) return '-'
-      // 取第一条本校学历（已按学历权重排序）
+    getPrimaryEdu(educations, field) {
+      if (!educations || educations.length === 0) return null
       const local = educations.find(e => e.isLocal !== false) || educations[0]
-      const parts = [DEGREE_TEXT[local.degree] || local.degree]
-      if (local.enrollmentYear) parts.push(local.enrollmentYear + '级')
-      if (local.className) parts.push(local.className + '班')
-      else if (local.college) parts.push(local.college)
-      if (local.major) parts.push(local.major)
-      // 多条本校学历时追加数量提示
-      const localCount = educations.filter(e => e.isLocal !== false).length
-      if (localCount > 1) parts.push(`等${localCount}个学历`)
-      return parts.join(' · ')
+      return local[field] || null
+    },
+    getGenderText(gender) {
+      return { 1: '男', 2: '女' }[gender] || '未知'
     },
     onFilterChange() { this.page = 1; this.loadList() },
     onSearch() { this.page = 1; this.loadList() },

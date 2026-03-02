@@ -333,9 +333,12 @@ export default {
           })
         })
         uni.showLoading({ title: '上传中...' })
+        // H5 端 tempFiles[0] 里文件对象在 file.file，其他端在 file.path
+        const filePath = file.file || file.path
+        const ext = (file.name || file.path || 'jpg').split('.').pop()
         const uploadRes = await uniCloud.uploadFile({
-          filePath: file.path,
-          cloudPath: `school-logo/${Date.now()}-${Math.random().toString(36).slice(2)}.${file.path.split('.').pop()}`
+          filePath,
+          cloudPath: `school-logo/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         })
         this.formData.logo = uploadRes.fileID
         uni.hideLoading()
