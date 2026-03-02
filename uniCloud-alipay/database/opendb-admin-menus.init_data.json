@@ -31,7 +31,7 @@
 		"sort": 210,
 		"parent_id": "alumni_management",
 		"permission": [],
-		"enable": true,
+		"enable": false,
 		"create_date": 1702662469396,
 		"_id": "alumni_dashboard"
 	},
