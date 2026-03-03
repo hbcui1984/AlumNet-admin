@@ -181,6 +181,12 @@
 					"style": {
 						"navigationBarTitleText": "学校配置"
 					}
+				},
+				{
+					"path": "dictionary/dictionary",
+					"style": {
+						"navigationBarTitleText": "字典管理"
+					}
 				}
 			]
 		},

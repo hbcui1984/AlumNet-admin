@@ -72,6 +72,18 @@
 		"_id": "alumni_school_config"
 	},
 	{
+		"menu_id": "alumni_dictionary",
+		"name": "字典管理",
+		"icon": "uni-icons-list",
+		"url": "/pages/alumni/dictionary/dictionary",
+		"sort": 250,
+		"parent_id": "alumni_management",
+		"permission": [],
+		"enable": true,
+		"create_date": 1702662469397,
+		"_id": "alumni_dictionary"
+	},
+	{
 		"menu_id": "system_management",
 		"name": "系统管理",
 		"icon": "admin-icons-fl-xitong",
