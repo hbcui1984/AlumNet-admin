@@ -177,6 +177,18 @@
 					}
 				},
 				{
+					"path": "activity/list",
+					"style": {
+						"navigationBarTitleText": "活动审核"
+					}
+				},
+				{
+					"path": "activity/publish",
+					"style": {
+						"navigationBarTitleText": "发布官方活动"
+					}
+				},
+				{
 					"path": "school-config/school-config",
 					"style": {
 						"navigationBarTitleText": "学校配置"
