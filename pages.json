@@ -183,9 +183,21 @@
 					}
 				},
 				{
+					"path": "activity/detail",
+					"style": {
+						"navigationBarTitleText": "活动详情"
+					}
+				},
+				{
 					"path": "activity/publish",
 					"style": {
 						"navigationBarTitleText": "发布官方活动"
+					}
+				},
+				{
+					"path": "organization/list",
+					"style": {
+						"navigationBarTitleText": "组织审核"
 					}
 				},
 				{
