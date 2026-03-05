@@ -20,9 +20,7 @@
           <uni-td align="center">{{ getTypeLabel(item.type) }}</uni-td>
           <uni-td align="center">{{ formatTime(item.startTime) }}</uni-td>
           <uni-td align="center">
-            <uni-tag :type="getAuditStatusType(item.auditStatus)">
-              {{ getAuditStatusLabel(item.auditStatus) }}
-            </uni-tag>
+            <uni-tag :type="getAuditStatusType(item.auditStatus)" :text="getAuditStatusLabel(item.auditStatus)"></uni-tag>
           </uni-td>
           <uni-td align="center">
             <view class="uni-group">
@@ -73,7 +71,6 @@ export default {
         if (res.errCode === 0) {
           this.dataList = res.data.list || []
           this.pagination.total = res.data.total || 0
-          console.log('活动列表数据:', this.dataList)
         } else {
           uni.showToast({ title: res.errMsg || '加载失败', icon: 'none' })
         }
@@ -95,6 +92,10 @@ export default {
     getAuditStatusLabel(status) {
       const map = { 0: '待审核', 1: '已通过', 2: '已拒绝' }
       return map[status] || '-'
+    },
+    getAuditStatusType(status) {
+      const map = { 0: 'warning', 1: 'success', 2: 'error' }
+      return map[status] || 'default'
     },
     getAuditStatusType(status) {
       const map = { 0: 'warning', 1: 'success', 2: 'error' }
