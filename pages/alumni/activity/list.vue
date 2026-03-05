@@ -64,45 +64,19 @@ export default {
       try {
         const { current, pageSize } = this.pagination
 
-        const res = await db.collection('alumni-activities')
-          .where({ isOfficial: false })
-          .field({
-            title: true,
-            organizerId: true,
-            type: true,
-            startTime: true,
-            auditStatus: true,
-            createTime: true
-          })
-          .orderBy('createTime', 'desc')
-          .skip((current - 1) * pageSize)
-          .limit(pageSize)
-          .get()
+        const adminCo = uniCloud.importObject('alumni-admin-co')
+        const res = await adminCo.getActivityList({
+          pageNum: current,
+          pageSize: pageSize
+        })
 
-        const countRes = await db.collection('alumni-activities')
-          .where({ isOfficial: false })
-          .count()
-
-        // 获取发起人信息
-        const userIds = [...new Set(res.data.map(item => item.organizerId))]
-        if (userIds.length > 0) {
-          const usersRes = await db.collection('uni-id-users')
-            .where({ _id: db.command.in(userIds) })
-            .field({ _id: true, realName: true, nickname: true })
-            .get()
-
-          const userMap = {}
-          usersRes.data.forEach(user => {
-            userMap[user._id] = user.realName || user.nickname || '未知'
-          })
-
-          res.data.forEach(item => {
-            item.organizerName = userMap[item.organizerId]
-          })
+        if (res.errCode === 0) {
+          this.dataList = res.data.list || []
+          this.pagination.total = res.data.total || 0
+          console.log('活动列表数据:', this.dataList)
+        } else {
+          uni.showToast({ title: res.errMsg || '加载失败', icon: 'none' })
         }
-
-        this.dataList = res.data
-        this.pagination.total = countRes.total
       } catch (e) {
         console.error('加载失败', e)
         uni.showToast({ title: '加载失败', icon: 'none' })
